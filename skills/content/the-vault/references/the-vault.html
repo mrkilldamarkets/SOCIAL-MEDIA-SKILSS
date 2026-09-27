@@ -1,0 +1,1364 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>The Vault — The operating system behind how I trade gold</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* ===========================================================
+     The Vault — single-file landing page
+     Visual system: matte black, champagne gold, editorial serif
+     + grotesk sans, layered glass with real depth.
+     =========================================================== */
+
+  :root{
+    --bg:           #0a0a0a;
+    --bg-1:         #0f0f0e;
+    --bg-2:         #141412;
+    --bg-3:         #1b1b17;
+    --line:         rgba(201,165,92,0.14);
+    --line-soft:    rgba(232,228,216,0.08);
+    --text:         #ece7d7;
+    --text-dim:     #a8a294;
+    --text-mute:    #6e6a5e;
+    --gold:         #c9a55c;
+    --gold-hi:      #e2c684;
+    --gold-lo:      #8a7140;
+    --gold-ink:     #1a1407;
+    --olive:        #3a3c2c;
+    --red-mute:     #b8635c;
+    --green-mute:   #8aa572;
+    --radius-s:     10px;
+    --radius:       16px;
+    --radius-l:     22px;
+    --shadow-1:     0 1px 0 rgba(255,255,255,0.04) inset, 0 20px 60px -30px rgba(0,0,0,0.9);
+    --shadow-2:     0 1px 0 rgba(255,255,255,0.05) inset, 0 40px 80px -28px rgba(0,0,0,0.95);
+    --serif:        "Instrument Serif", "Iowan Old Style", Georgia, serif;
+    --sans:         "Geist", ui-sans-serif, system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+    --mono:         "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+
+  *{ box-sizing: border-box; }
+  html, body{ margin:0; padding:0; }
+  html{ scroll-behavior: smooth; }
+  body{
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+  }
+
+  /* Global ambient backdrop — subtle film grain + soft gold light */
+  body::before{
+    content:"";
+    position: fixed; inset:0;
+    pointer-events:none;
+    z-index:0;
+    background:
+      radial-gradient(1200px 700px at 80% -10%, rgba(201,165,92,0.10), transparent 60%),
+      radial-gradient(900px 600px at -10% 30%, rgba(201,165,92,0.05), transparent 55%),
+      radial-gradient(1000px 700px at 50% 110%, rgba(201,165,92,0.06), transparent 60%);
+  }
+  body::after{
+    content:"";
+    position: fixed; inset:0;
+    pointer-events:none;
+    z-index:0;
+    opacity:.06;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.9 0 0 0 0 0.85 0 0 0 0 0.7 0 0 0 0.4 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+    mix-blend-mode: overlay;
+  }
+
+  main, header, footer, section{ position: relative; z-index: 1; }
+
+  /* ---- Typography ---- */
+  h1,h2,h3,h4{ font-family: var(--serif); font-weight: 400; letter-spacing: -0.01em; line-height: 1.04; margin: 0; color: var(--text); }
+  h1{ font-size: clamp(48px, 7.4vw, 104px); }
+  h2{ font-size: clamp(36px, 4.6vw, 64px); }
+  h3{ font-size: clamp(22px, 2.2vw, 30px); }
+  h4{ font-size: 20px; }
+  p { margin: 0; }
+  em.it{ font-style: italic; color: var(--gold-hi); }
+
+  .eyebrow{
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--gold);
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .eyebrow::before{
+    content:""; width: 22px; height:1px; background: var(--gold); opacity:.6;
+  }
+
+  .lede{ color: var(--text-dim); font-size: clamp(16px, 1.2vw, 19px); line-height: 1.6; max-width: 62ch; }
+  .small{ font-size: 13px; color: var(--text-mute); }
+  .mono{ font-family: var(--mono); }
+  .num{ font-family: var(--mono); font-feature-settings: "tnum" 1; }
+
+  /* ---- Layout primitives ---- */
+  .wrap{ max-width: 1240px; margin: 0 auto; padding: 0 28px; }
+  .section{ padding: clamp(80px, 10vw, 140px) 0; position: relative; }
+  .section + .section{ border-top: 1px solid var(--line-soft); }
+
+  .section-head{ display: flex; flex-direction: column; gap: 18px; max-width: 880px; margin-bottom: clamp(40px, 5vw, 64px); }
+
+  /* ---- Buttons ---- */
+  .btn{
+    display: inline-flex; align-items: center; gap: 12px;
+    font-family: var(--sans);
+    font-weight: 500;
+    font-size: 15px;
+    letter-spacing: 0.01em;
+    padding: 16px 22px;
+    border-radius: 999px;
+    text-decoration: none;
+    transition: transform .2s ease, box-shadow .25s ease, background .25s ease;
+    cursor: pointer; border: 1px solid transparent;
+    white-space: nowrap;
+  }
+  .btn .arrow{
+    display: inline-flex; width: 26px; height: 26px; border-radius: 999px;
+    align-items: center; justify-content: center;
+    background: rgba(0,0,0,0.18);
+    transition: transform .25s ease;
+  }
+  .btn:hover .arrow{ transform: translateX(3px); }
+
+  .btn-primary{
+    background: linear-gradient(180deg, var(--gold-hi) 0%, var(--gold) 55%, var(--gold-lo) 100%);
+    color: var(--gold-ink);
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.35) inset,
+      0 -10px 20px rgba(138,113,64,0.35) inset,
+      0 14px 34px -10px rgba(201,165,92,0.55),
+      0 4px 14px -4px rgba(0,0,0,0.6);
+  }
+  .btn-primary:hover{ transform: translateY(-1px); }
+  .btn-ghost{
+    color: var(--text);
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--line);
+    backdrop-filter: blur(8px);
+  }
+  .btn-ghost:hover{ background: rgba(201,165,92,0.06); }
+
+  /* ---- Glass card primitive ---- */
+  .glass{
+    position: relative;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0.005) 40%, rgba(0,0,0,0.15)),
+      rgba(20,20,18,0.55);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-1);
+    backdrop-filter: blur(14px) saturate(110%);
+    -webkit-backdrop-filter: blur(14px) saturate(110%);
+  }
+  .glass::before{
+    content:"";
+    position: absolute; inset:0;
+    border-radius: inherit;
+    pointer-events:none;
+    background: linear-gradient(135deg, rgba(232,198,132,0.18), transparent 30%, transparent 70%, rgba(232,198,132,0.08));
+    -webkit-mask: linear-gradient(#000,#000) content-box, linear-gradient(#000,#000);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    padding: 1px;
+    opacity:.7;
+  }
+
+  /* =================== NAV =================== */
+  .nav{
+    position: sticky; top: 0; z-index: 50;
+    backdrop-filter: blur(18px) saturate(120%);
+    -webkit-backdrop-filter: blur(18px) saturate(120%);
+    background: linear-gradient(180deg, rgba(10,10,10,0.78), rgba(10,10,10,0.45));
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .nav-inner{
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 28px;
+    max-width: 1240px; margin: 0 auto;
+  }
+  .brand{ display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--text); }
+  .brand-mark{
+    width: 32px; height: 32px; border-radius: 8px;
+    background:
+      radial-gradient(circle at 30% 25%, var(--gold-hi), var(--gold) 35%, var(--gold-lo) 80%);
+    box-shadow: 0 0 0 1px rgba(232,198,132,0.4) inset, 0 6px 16px -4px rgba(201,165,92,0.5);
+    position: relative;
+    display: grid; place-items: center;
+  }
+  .brand-mark::after{
+    content:""; width:14px; height:14px; border-radius:3px;
+    background: var(--gold-ink);
+    clip-path: polygon(50% 0, 100% 30%, 100% 70%, 50% 100%, 0 70%, 0 30%);
+    opacity:.7;
+  }
+  .brand-name{ font-family: var(--serif); font-size: 20px; letter-spacing: 0.01em; }
+  .brand-name em{ font-style: italic; color: var(--gold-hi); }
+  .nav-links{ display: flex; gap: 28px; }
+  .nav-links a{
+    color: var(--text-dim); text-decoration: none; font-size: 14px;
+    transition: color .2s ease;
+  }
+  .nav-links a:hover{ color: var(--text); }
+  .nav-cta{ font-size: 13px; padding: 10px 16px; }
+  @media (max-width: 880px){
+    .nav-links{ display:none; }
+  }
+
+  /* =================== HERO =================== */
+  .hero{
+    padding: clamp(60px, 9vw, 120px) 0 clamp(80px, 10vw, 140px);
+    position: relative;
+  }
+  .hero-grid{
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+    gap: clamp(40px, 6vw, 80px);
+    align-items: center;
+  }
+  @media (max-width: 1000px){ .hero-grid{ grid-template-columns: 1fr; } }
+
+  .hero h1{
+    margin-top: 28px;
+    margin-bottom: 26px;
+    letter-spacing: -0.02em;
+  }
+  .hero h1 .it{ font-style: italic; color: var(--gold-hi); }
+  .hero-sub{ color: var(--text-dim); font-size: clamp(17px, 1.3vw, 20px); line-height: 1.55; max-width: 56ch; }
+  .hero-body{ color: var(--text-mute); font-size: 15px; line-height: 1.65; max-width: 56ch; margin-top: 22px; }
+
+  .hero-cta-row{ display:flex; gap: 14px; align-items: center; margin-top: 36px; flex-wrap: wrap; }
+  .hero-micro{ color: var(--text-mute); font-size: 13px; margin-top: 18px; }
+  .hero-micro .num{ color: var(--text-dim); }
+
+  /* ----- 3D hero visual ----- */
+  .stage{
+    perspective: 1600px;
+    perspective-origin: 60% 40%;
+    position: relative;
+    min-height: 580px;
+  }
+  .desk{
+    position: relative;
+    transform-style: preserve-3d;
+    transform: rotateY(-14deg) rotateX(8deg) rotateZ(-1deg);
+    animation: float 9s ease-in-out infinite;
+  }
+  @keyframes float{
+    0%,100%{ transform: rotateY(-14deg) rotateX(8deg) rotateZ(-1deg) translateY(0); }
+    50%    { transform: rotateY(-13deg) rotateX(7deg) rotateZ(-1deg) translateY(-8px); }
+  }
+
+  /* Big chart card */
+  .chart-card{
+    width: 100%;
+    aspect-ratio: 4 / 3.2;
+    border-radius: 20px;
+    padding: 22px;
+    position: relative;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.04), rgba(0,0,0,0.2)),
+      linear-gradient(180deg, #1a1815 0%, #100f0c 100%);
+    border: 1px solid var(--line);
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.06) inset,
+      0 80px 120px -50px rgba(0,0,0,0.9),
+      0 30px 60px -20px rgba(201,165,92,0.18);
+    overflow: hidden;
+  }
+  .chart-card::before{
+    content:""; position:absolute; inset:0;
+    background:
+      radial-gradient(60% 50% at 70% 20%, rgba(232,198,132,0.18), transparent 60%),
+      linear-gradient(180deg, transparent 60%, rgba(0,0,0,0.4));
+    pointer-events:none;
+  }
+  .chart-head{
+    display:flex; align-items:center; justify-content:space-between;
+    position:relative; z-index:2;
+    margin-bottom: 14px;
+  }
+  .chart-symbol{ display:flex; align-items:center; gap:10px; }
+  .chart-symbol .dot{
+    width:8px; height:8px; border-radius:99px;
+    background: var(--gold-hi);
+    box-shadow: 0 0 12px var(--gold);
+  }
+  .chart-symbol .tk{ font-family: var(--mono); font-size: 13px; color: var(--text); letter-spacing: 0.06em; }
+  .chart-symbol .tk em{ color: var(--gold); font-style: normal; }
+  .chart-price{ font-family: var(--mono); font-size: 13px; color: var(--green-mute); }
+  .chart-svg{ width:100%; height: calc(100% - 38px); display:block; position: relative; z-index: 1; }
+  .chart-footer{
+    position:absolute; left:22px; right:22px; bottom: 16px;
+    display:flex; justify-content: space-between;
+    font-family: var(--mono); font-size: 10px; color: var(--text-mute); letter-spacing: 0.15em;
+    text-transform: uppercase;
+    z-index: 2;
+  }
+
+  /* Floating mini cards */
+  .mini{
+    position: absolute;
+    padding: 14px 16px;
+    border-radius: 14px;
+    background: linear-gradient(180deg, rgba(28,26,22,0.85), rgba(18,17,15,0.85));
+    border: 1px solid var(--line);
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.06) inset,
+      0 30px 50px -20px rgba(0,0,0,0.9);
+    backdrop-filter: blur(10px);
+    min-width: 200px;
+  }
+  .mini .lab{ font-family: var(--mono); font-size: 10px; color: var(--text-mute); letter-spacing: 0.18em; text-transform: uppercase; }
+  .mini .val{ font-family: var(--serif); font-size: 20px; color: var(--text); margin-top: 4px; }
+  .mini .val em{ font-style: italic; color: var(--gold-hi); }
+  .mini .row{ display:flex; align-items:center; justify-content:space-between; gap: 14px; }
+  .pill{
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--gold-hi);
+    background: rgba(201,165,92,0.12);
+    border: 1px solid rgba(201,165,92,0.28);
+    padding: 4px 8px; border-radius: 999px;
+  }
+  .pill.neutral{ color: var(--text-dim); background: rgba(255,255,255,0.04); border-color: var(--line-soft); }
+  .pill.up{ color: var(--green-mute); background: rgba(138,165,114,0.10); border-color: rgba(138,165,114,0.25); }
+  .pill.down{ color: var(--red-mute); background: rgba(184,99,92,0.10); border-color: rgba(184,99,92,0.22); }
+
+  .mini-1{ top: 6%; right: -10%; transform: translateZ(80px); width: 230px; }
+  .mini-2{ bottom: 6%; left: -10%; transform: translateZ(60px); width: 240px; }
+  .mini-3{ bottom: 28%; right: -6%; transform: translateZ(110px); width: 220px; }
+
+  .badge-15{
+    position: absolute; top: -14px; left: -14px;
+    transform: translateZ(120px) rotate(-4deg);
+    background: var(--bg);
+    border: 1px solid var(--gold);
+    color: var(--gold-hi);
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    box-shadow: 0 14px 30px -8px rgba(201,165,92,0.45);
+    z-index: 3;
+  }
+
+  @media (max-width: 600px){
+    .mini-1{ right: 0; }
+    .mini-2{ left: 0; }
+    .mini-3{ right: 0; bottom: 38%; }
+  }
+
+  /* =================== CREDIBILITY STRIP =================== */
+  .proof-grid{
+    display: grid; gap: 18px;
+    grid-template-columns: repeat(4, 1fr);
+  }
+  @media (max-width: 980px){ .proof-grid{ grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 540px){ .proof-grid{ grid-template-columns: 1fr; } }
+
+  .proof{
+    padding: 24px;
+    border-radius: var(--radius);
+    display: flex; flex-direction: column; gap: 16px;
+    min-height: 180px;
+  }
+  .proof-icon{
+    width: 38px; height: 38px; border-radius: 10px;
+    background: linear-gradient(180deg, rgba(201,165,92,0.16), rgba(201,165,92,0.04));
+    border: 1px solid var(--line);
+    display: grid; place-items: center;
+    color: var(--gold-hi);
+  }
+  .proof-text{ font-family: var(--serif); font-size: 19px; line-height: 1.3; color: var(--text); }
+
+  /* =================== ORIGIN STORY =================== */
+  .origin-grid{
+    display:grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: clamp(40px, 6vw, 80px); align-items: center;
+  }
+  @media (max-width: 980px){ .origin-grid{ grid-template-columns: 1fr; } }
+
+  .origin-body p{ color: var(--text-dim); font-size: 17px; line-height: 1.7; max-width: 56ch; }
+  .origin-body p + p{ margin-top: 18px; }
+
+  /* Framework diagram */
+  .framework{
+    padding: 28px;
+    border-radius: var(--radius-l);
+  }
+  .framework-title{
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 24px;
+  }
+  .layer-stack{ display: flex; flex-direction: column; gap: 12px; }
+  .layer{
+    display: grid; grid-template-columns: 38px 1fr auto;
+    gap: 18px; align-items: center;
+    padding: 18px 20px;
+    border-radius: 14px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.025), rgba(0,0,0,0.15));
+    border: 1px solid var(--line-soft);
+    position: relative;
+  }
+  .layer .n{ font-family: var(--mono); font-size: 11px; color: var(--text-mute); letter-spacing: 0.14em; }
+  .layer .name{ font-family: var(--serif); font-size: 22px; color: var(--text); }
+  .layer .tag{ font-family: var(--mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-mute); }
+  .layer.is-key{
+    background: linear-gradient(180deg, rgba(201,165,92,0.10), rgba(201,165,92,0.02));
+    border-color: rgba(201,165,92,0.32);
+  }
+  .layer.is-key .name{ color: var(--gold-hi); }
+  .layer.is-key .tag{ color: var(--gold); }
+
+  .framework-foot{
+    margin-top: 22px; padding-top: 22px; border-top: 1px dashed var(--line-soft);
+    font-family: var(--serif); font-style: italic; font-size: 22px; color: var(--text);
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .framework-foot em{ color: var(--gold-hi); }
+  .framework-foot .ring{
+    width: 36px; height: 36px; border-radius: 50%;
+    border: 1px solid var(--gold);
+    color: var(--gold-hi);
+    display:grid; place-items:center;
+    font-family: var(--mono); font-size: 12px;
+  }
+
+  /* =================== COMPARISON =================== */
+  .compare{
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--line-soft);
+    border: 1px solid var(--line-soft);
+    border-radius: var(--radius-l);
+    overflow: hidden;
+  }
+  @media (max-width: 820px){ .compare{ grid-template-columns: 1fr; } }
+  .compare-col{ padding: 28px; background: var(--bg-1); }
+  .compare-col.is-vault{ background: linear-gradient(180deg, rgba(201,165,92,0.06), rgba(201,165,92,0.01)); }
+  .compare-head{
+    display:flex; align-items:center; gap: 12px;
+    padding-bottom: 22px;
+    border-bottom: 1px solid var(--line-soft);
+    margin-bottom: 16px;
+  }
+  .compare-head .label{ font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-mute); }
+  .compare-head .title{ font-family: var(--serif); font-size: 22px; }
+  .compare-col.is-most .title{ color: var(--text-dim); }
+  .compare-col.is-vault .title{ color: var(--gold-hi); }
+  .compare-col.is-vault .label{ color: var(--gold); }
+  .compare-list{ display: flex; flex-direction: column; }
+  .compare-list .item{
+    padding: 16px 0;
+    border-bottom: 1px dashed var(--line-soft);
+    font-family: var(--serif); font-size: 19px;
+    display:flex; gap: 12px; align-items: flex-start;
+  }
+  .compare-list .item:last-child{ border-bottom: none; }
+  .compare-col.is-most .item{ color: var(--text-dim); }
+  .compare-col.is-most .item .glyph{ color: var(--red-mute); }
+  .compare-col.is-vault .item{ color: var(--text); }
+  .compare-col.is-vault .item .glyph{ color: var(--gold-hi); }
+  .glyph{ flex: 0 0 18px; font-family: var(--mono); font-size: 18px; line-height: 1; padding-top: 4px; }
+
+  /* =================== MODULE MAP =================== */
+  .modules{
+    display: grid; gap: 22px;
+    grid-template-columns: 1fr 1.1fr 1fr;
+    align-items: stretch;
+  }
+  @media (max-width: 1040px){ .modules{ grid-template-columns: 1fr; } }
+
+  .mod-col{
+    padding: 28px 26px;
+    border-radius: var(--radius-l);
+    display: flex; flex-direction: column; gap: 22px;
+  }
+  .mod-col .part{
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--text-mute);
+  }
+  .mod-col h3{ font-family: var(--serif); font-size: 28px; line-height: 1.1; }
+  .mod-col .range{
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--mono); font-size: 12px;
+    padding: 6px 10px; border-radius: 999px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--line-soft);
+    color: var(--text-dim);
+    align-self: flex-start;
+  }
+  .mod-list{ list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 2px; }
+  .mod-list li{
+    display: grid; grid-template-columns: 38px 1fr;
+    align-items: baseline; gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .mod-list li:last-child{ border-bottom: none; }
+  .mod-list .ix{ font-family: var(--mono); font-size: 11px; color: var(--text-mute); letter-spacing: 0.1em; }
+  .mod-list .nm{ font-family: var(--serif); font-size: 18px; color: var(--text); line-height: 1.3; }
+  .mod-note{ font-size: 13px; color: var(--text-mute); line-height: 1.55; }
+
+  /* Highlighted middle column */
+  .mod-col.is-key{
+    background:
+      radial-gradient(120% 80% at 50% 0%, rgba(201,165,92,0.14), transparent 60%),
+      linear-gradient(180deg, rgba(201,165,92,0.05), rgba(0,0,0,0.2));
+    border: 1px solid rgba(201,165,92,0.36);
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.06) inset,
+      0 40px 80px -30px rgba(201,165,92,0.25),
+      0 30px 70px -30px rgba(0,0,0,0.9);
+    position: relative;
+  }
+  .mod-col.is-key .part{ color: var(--gold); }
+  .mod-col.is-key h3{ color: var(--gold-hi); }
+  .mod-col.is-key .range{ color: var(--gold-hi); background: rgba(201,165,92,0.1); border-color: rgba(201,165,92,0.35); }
+  .mod-col.is-key .crown{
+    position:absolute; top: -14px; right: 20px;
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--gold-ink);
+    background: linear-gradient(180deg, var(--gold-hi), var(--gold));
+    padding: 6px 12px; border-radius: 999px;
+    box-shadow: 0 10px 24px -8px rgba(201,165,92,0.6);
+  }
+
+  /* =================== INCLUDED =================== */
+  .inc-grid{
+    display:grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+  }
+  @media (max-width: 900px){ .inc-grid{ grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 560px){ .inc-grid{ grid-template-columns: 1fr; } }
+  .inc{
+    padding: 20px; border-radius: 14px;
+    display: flex; align-items: flex-start; gap: 14px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.15));
+    border: 1px solid var(--line-soft);
+    transition: border-color .25s ease, transform .25s ease;
+  }
+  .inc:hover{ border-color: rgba(201,165,92,0.35); transform: translateY(-2px); }
+  .inc-ic{
+    flex: 0 0 36px; width: 36px; height: 36px;
+    border-radius: 9px;
+    background: rgba(201,165,92,0.08);
+    border: 1px solid rgba(201,165,92,0.22);
+    display: grid; place-items: center;
+    color: var(--gold-hi);
+  }
+  .inc-text{ font-family: var(--serif); font-size: 18px; line-height: 1.3; color: var(--text); }
+
+  /* =================== WHO IT'S FOR =================== */
+  .who{
+    display: grid; gap: 22px; grid-template-columns: 1fr 1fr;
+  }
+  @media (max-width: 820px){ .who{ grid-template-columns: 1fr; } }
+  .who-card{
+    padding: 32px;
+    border-radius: var(--radius-l);
+  }
+  .who-card.fit{
+    background: linear-gradient(180deg, rgba(201,165,92,0.06), rgba(0,0,0,0.1));
+    border: 1px solid rgba(201,165,92,0.28);
+  }
+  .who-card.no-fit{
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.15));
+    border: 1px solid var(--line-soft);
+  }
+  .who-card h3{ display:flex; align-items:center; gap: 12px; margin-bottom: 22px; }
+  .who-card .badge{
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+    padding: 4px 8px; border-radius: 999px;
+  }
+  .who-card.fit .badge{ color: var(--gold-ink); background: var(--gold-hi); }
+  .who-card.no-fit .badge{ color: var(--text-dim); background: rgba(255,255,255,0.05); border: 1px solid var(--line-soft); }
+  .who-list{ list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 16px; }
+  .who-list li{ display:grid; grid-template-columns: 22px 1fr; gap: 14px; font-family: var(--serif); font-size: 19px; line-height: 1.4; }
+  .who-list .mk{ font-family: var(--mono); font-size: 16px; line-height: 1.2; padding-top: 2px; }
+  .who-card.fit .mk{ color: var(--gold-hi); }
+  .who-card.no-fit .mk{ color: var(--red-mute); }
+  .who-card.no-fit li{ color: var(--text-dim); }
+
+  /* =================== PRICING =================== */
+  .pricing-wrap{ display: grid; grid-template-columns: 1.1fr 1fr; gap: clamp(32px, 5vw, 64px); align-items: center; }
+  @media (max-width: 980px){ .pricing-wrap{ grid-template-columns: 1fr; } }
+  .price-card{
+    padding: 40px;
+    border-radius: var(--radius-l);
+    background:
+      radial-gradient(120% 100% at 0% 0%, rgba(201,165,92,0.18), transparent 60%),
+      linear-gradient(180deg, rgba(255,255,255,0.04), rgba(0,0,0,0.25)),
+      rgba(20,20,18,0.6);
+    border: 1px solid rgba(201,165,92,0.35);
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.06) inset,
+      0 50px 80px -30px rgba(201,165,92,0.2),
+      0 40px 80px -30px rgba(0,0,0,0.95);
+    position: relative;
+    overflow: hidden;
+  }
+  .price-card::after{
+    content:""; position: absolute; inset: -1px;
+    pointer-events:none; border-radius: inherit;
+    background: linear-gradient(135deg, rgba(232,198,132,0.3), transparent 30%, transparent 75%, rgba(232,198,132,0.12));
+    -webkit-mask: linear-gradient(#000,#000) content-box, linear-gradient(#000,#000);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+    padding: 1px;
+  }
+  .price-head{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom: 22px;
+  }
+  .price-tag{
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold);
+  }
+  .seat-dot{
+    width: 8px; height: 8px; border-radius: 99px; background: var(--gold-hi); box-shadow: 0 0 12px var(--gold);
+    display: inline-block; vertical-align: middle; margin-right: 6px;
+    animation: pulse 2.4s ease-in-out infinite;
+  }
+  @keyframes pulse{ 0%,100%{ opacity:.5; } 50%{ opacity:1; } }
+  .price-big{
+    font-family: var(--serif); font-size: clamp(72px, 9vw, 116px); line-height: 1; color: var(--text);
+    letter-spacing: -0.02em;
+    display: flex; align-items: baseline; gap: 8px;
+  }
+  .price-big .currency{ font-size: 0.35em; color: var(--gold-hi); }
+  .price-big .usd{ font-family: var(--mono); font-size: 13px; color: var(--text-mute); letter-spacing: 0.14em; padding-left: 12px; }
+  .price-future{
+    font-family: var(--mono); font-size: 12px; color: var(--text-mute); letter-spacing: 0.1em;
+    margin-top: 10px;
+  }
+  .price-future em{ color: var(--text-dim); font-style: normal; }
+
+  .price-body{
+    margin-top: 28px;
+    color: var(--text-dim); font-size: 15px; line-height: 1.65;
+    border-top: 1px dashed var(--line-soft);
+    padding-top: 22px;
+  }
+  .price-cta{ margin-top: 26px; }
+  .price-bullets{ list-style: none; margin: 18px 0 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+  .price-bullets li{ display:flex; align-items: center; gap: 10px; color: var(--text-dim); font-size: 14px; }
+  .price-bullets .ck{ color: var(--gold-hi); font-family: var(--mono); }
+
+  /* =================== FAQ =================== */
+  .faq{ display: flex; flex-direction: column; gap: 8px; }
+  .qa{
+    border: 1px solid var(--line-soft);
+    border-radius: var(--radius);
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.15));
+    overflow: hidden;
+    transition: border-color .25s ease;
+  }
+  .qa[open]{ border-color: rgba(201,165,92,0.3); }
+  .qa summary{
+    list-style: none;
+    cursor: pointer;
+    padding: 22px 26px;
+    display: flex; align-items: center; justify-content: space-between; gap: 24px;
+    font-family: var(--serif); font-size: 22px; color: var(--text);
+  }
+  .qa summary::-webkit-details-marker{ display:none; }
+  .qa .ic{
+    width: 28px; height: 28px; border-radius: 99px;
+    border: 1px solid var(--line); display: grid; place-items: center; color: var(--gold-hi);
+    font-family: var(--mono); font-size: 16px; line-height: 1; transition: transform .25s ease, background .25s ease;
+    flex-shrink: 0;
+  }
+  .qa[open] .ic{ background: rgba(201,165,92,0.12); transform: rotate(45deg); }
+  .qa-body{
+    padding: 0 26px 24px;
+    color: var(--text-dim); font-size: 16px; line-height: 1.65;
+    max-width: 76ch;
+  }
+
+  /* =================== FINAL CTA =================== */
+  .final{
+    text-align: center;
+    padding: clamp(80px, 12vw, 140px) 24px;
+    border-radius: var(--radius-l);
+    background:
+      radial-gradient(70% 80% at 50% 0%, rgba(201,165,92,0.18), transparent 60%),
+      radial-gradient(50% 100% at 50% 100%, rgba(201,165,92,0.08), transparent 60%),
+      linear-gradient(180deg, rgba(20,20,18,0.6), rgba(12,12,11,0.6));
+    border: 1px solid rgba(201,165,92,0.28);
+    position: relative; overflow: hidden;
+  }
+  .final::before{
+    content:""; position:absolute; inset:0;
+    background-image:
+      linear-gradient(rgba(232,198,132,0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(232,198,132,0.06) 1px, transparent 1px);
+    background-size: 60px 60px;
+    mask-image: radial-gradient(circle at 50% 50%, #000 0, transparent 70%);
+    pointer-events:none;
+  }
+  .final h2{ max-width: 22ch; margin: 0 auto 22px; position: relative; }
+  .final p{ color: var(--text-dim); max-width: 56ch; margin: 0 auto 36px; font-size: 17px; line-height: 1.6; position: relative; }
+  .final .btn{ position: relative; }
+  .final .hero-micro{ position: relative; margin-top: 22px; }
+
+  /* =================== FOOTER =================== */
+  footer{
+    padding: 60px 0 80px;
+    border-top: 1px solid var(--line-soft);
+    margin-top: 80px;
+  }
+  .foot{
+    display:flex; align-items:center; justify-content: space-between; gap: 24px; flex-wrap: wrap;
+    color: var(--text-mute); font-size: 13px;
+  }
+  .foot a{ color: var(--text-dim); text-decoration: none; }
+  .foot a:hover{ color: var(--text); }
+  .foot-links{ display:flex; gap: 22px; }
+
+  /* fine details */
+  ::selection{ background: rgba(201,165,92,0.45); color: #0a0a0a; }
+
+  /* utility */
+  .center{ text-align: center; }
+  .mt-s{ margin-top: 14px; }
+  .mt-m{ margin-top: 26px; }
+  .grid-bg{ position:absolute; inset:0; pointer-events:none; opacity:.4;
+    background-image:
+      linear-gradient(rgba(232,228,216,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(232,228,216,0.03) 1px, transparent 1px);
+    background-size: 80px 80px;
+    mask-image: linear-gradient(180deg, transparent, #000 30%, #000 70%, transparent);
+  }
+</style>
+</head>
+<body>
+
+<!-- ====================== NAV ====================== -->
+<header class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="#top">
+      <span class="brand-mark"></span>
+      <span class="brand-name">The <em>Vault</em></span>
+    </a>
+    <nav class="nav-links">
+      <a href="#origin">Origin</a>
+      <a href="#different">Approach</a>
+      <a href="#modules">Modules</a>
+      <a href="#included">Included</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <a class="btn btn-primary nav-cta" href="https://4xprophet.com/product/the-vault-prelaunch/">
+      Get The Vault
+      <span class="arrow">→</span>
+    </a>
+  </div>
+</header>
+
+<main id="top">
+
+<!-- ====================== HERO ====================== -->
+<section class="hero">
+  <div class="grid-bg"></div>
+  <div class="wrap hero-grid">
+    <div>
+      <span class="eyebrow">The Vault · Founding cohort 2026</span>
+      <h1>The operating system behind <span class="it">how I trade gold.</span></h1>
+      <p class="hero-sub">A complete framework for traders who already understand the basics, but know they are still missing the layer above technicals — the macro context, regime awareness, and the weekly workflow that turns information into one clear bias.</p>
+      <p class="hero-body">The Vault is not another surface-level trading course. It is the exact operator system I built because I could not find a single retail resource that combined technical execution, macro drivers, and a real weekly process in one place. So I built it for myself first. Now it is available publicly for the first time.</p>
+
+      <div class="hero-cta-row">
+        <a class="btn btn-primary" href="https://4xprophet.com/product/the-vault-prelaunch/">
+          Get The Vault
+          <span class="arrow">→</span>
+        </a>
+        <a class="btn btn-ghost" href="#modules">See the modules</a>
+      </div>
+      <p class="hero-micro">Founding cohort price: <span class="num">$797 USD</span>. Future public pricing: <span class="num">$1,997 USD</span>.</p>
+    </div>
+
+    <!-- 3D hero composite -->
+    <div class="stage" aria-hidden="true">
+      <div class="desk">
+        <span class="badge-15">15 Modules · Gold-Focused · Self-Paced</span>
+
+        <!-- main chart card -->
+        <div class="chart-card">
+          <div class="chart-head">
+            <div class="chart-symbol">
+              <span class="dot"></span>
+              <span class="tk">XAU / <em>USD</em> · 4H</span>
+            </div>
+            <div class="chart-price">2,418.65 <span style="color:var(--text-mute)">USD</span></div>
+          </div>
+          <svg class="chart-svg" viewBox="0 0 600 360" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="goldLine" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" stop-color="#e2c684"/>
+                <stop offset="100%" stop-color="#c9a55c"/>
+              </linearGradient>
+              <linearGradient id="goldFill" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" stop-color="#c9a55c" stop-opacity="0.30"/>
+                <stop offset="100%" stop-color="#c9a55c" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <!-- grid -->
+            <g stroke="rgba(232,228,216,0.06)" stroke-width="1">
+              <line x1="0" x2="600" y1="60" y2="60"/>
+              <line x1="0" x2="600" y1="120" y2="120"/>
+              <line x1="0" x2="600" y1="180" y2="180"/>
+              <line x1="0" x2="600" y1="240" y2="240"/>
+              <line x1="0" x2="600" y1="300" y2="300"/>
+            </g>
+            <!-- candles -->
+            <g>
+              <!-- bearish series start -->
+              <g stroke="#b8635c" fill="#b8635c">
+                <rect x="20"  y="170" width="8" height="36"/><line x1="24"  x2="24"  y1="160" y2="220" stroke-width="1"/>
+                <rect x="36"  y="190" width="8" height="28"/><line x1="40"  x2="40"  y1="182" y2="232" stroke-width="1"/>
+                <rect x="52"  y="200" width="8" height="40"/><line x1="56"  x2="56"  y1="192" y2="250" stroke-width="1"/>
+                <rect x="68"  y="215" width="8" height="32"/><line x1="72"  x2="72"  y1="208" y2="258" stroke-width="1"/>
+                <rect x="84"  y="225" width="8" height="46"/><line x1="88"  x2="88"  y1="218" y2="280" stroke-width="1"/>
+              </g>
+              <!-- bullish reversal -->
+              <g stroke="#8aa572" fill="#8aa572">
+                <rect x="100" y="245" width="8" height="32"/><line x1="104" x2="104" y1="238" y2="284" stroke-width="1"/>
+                <rect x="116" y="220" width="8" height="38"/><line x1="120" x2="120" y1="210" y2="266" stroke-width="1"/>
+                <rect x="132" y="190" width="8" height="44"/><line x1="136" x2="136" y1="182" y2="240" stroke-width="1"/>
+                <rect x="148" y="172" width="8" height="32"/><line x1="152" x2="152" y1="164" y2="212" stroke-width="1"/>
+                <rect x="164" y="158" width="8" height="28"/><line x1="168" x2="168" y1="150" y2="196" stroke-width="1"/>
+              </g>
+              <!-- consolidation -->
+              <g stroke="#b8635c" fill="#b8635c">
+                <rect x="180" y="160" width="8" height="20"/><line x1="184" x2="184" y1="154" y2="188" stroke-width="1"/>
+                <rect x="196" y="166" width="8" height="22"/><line x1="200" x2="200" y1="160" y2="196" stroke-width="1"/>
+              </g>
+              <g stroke="#8aa572" fill="#8aa572">
+                <rect x="212" y="148" width="8" height="26"/><line x1="216" x2="216" y1="138" y2="184" stroke-width="1"/>
+                <rect x="228" y="130" width="8" height="30"/><line x1="232" x2="232" y1="122" y2="170" stroke-width="1"/>
+                <rect x="244" y="110" width="8" height="32"/><line x1="248" x2="248" y1="100" y2="152" stroke-width="1"/>
+                <rect x="260" y="92" width="8" height="28"/><line x1="264" x2="264" y1="84" y2="128" stroke-width="1"/>
+                <rect x="276" y="80" width="8" height="22"/><line x1="280" x2="280" y1="72" y2="112" stroke-width="1"/>
+              </g>
+              <g stroke="#b8635c" fill="#b8635c">
+                <rect x="292" y="86" width="8" height="20"/><line x1="296" x2="296" y1="78" y2="116" stroke-width="1"/>
+                <rect x="308" y="98" width="8" height="22"/><line x1="312" x2="312" y1="92" y2="128" stroke-width="1"/>
+              </g>
+              <g stroke="#8aa572" fill="#8aa572">
+                <rect x="324" y="92" width="8" height="22"/><line x1="328" x2="328" y1="84" y2="124" stroke-width="1"/>
+                <rect x="340" y="74" width="8" height="28"/><line x1="344" x2="344" y1="66" y2="112" stroke-width="1"/>
+                <rect x="356" y="56" width="8" height="30"/><line x1="360" x2="360" y1="46" y2="96" stroke-width="1"/>
+                <rect x="372" y="48" width="8" height="26"/><line x1="376" x2="376" y1="40" y2="84" stroke-width="1"/>
+              </g>
+            </g>
+
+            <!-- structure line -->
+            <path d="M 8 232 Q 60 244 88 248 T 168 178 T 264 96 T 376 56"
+                  fill="none" stroke="url(#goldLine)" stroke-width="1.6" stroke-dasharray="0" opacity="0.65"/>
+            <path d="M 8 232 Q 60 244 88 248 T 168 178 T 264 96 T 376 56 L 376 360 L 8 360 Z"
+                  fill="url(#goldFill)" opacity="0.5"/>
+
+            <!-- annotations -->
+            <g font-family="Geist Mono, monospace" font-size="9" letter-spacing="1">
+              <!-- liquidity sweep -->
+              <line x1="88" y1="282" x2="88" y2="305" stroke="rgba(232,198,132,0.6)" stroke-dasharray="2 3"/>
+              <rect x="58" y="306" width="62" height="14" rx="3" fill="rgba(232,198,132,0.16)" stroke="rgba(232,198,132,0.5)"/>
+              <text x="89" y="316" text-anchor="middle" fill="#e2c684">LIQ. SWEEP</text>
+
+              <!-- order block -->
+              <rect x="170" y="148" width="78" height="40" fill="rgba(232,198,132,0.08)" stroke="rgba(232,198,132,0.4)" stroke-dasharray="3 3"/>
+              <text x="209" y="142" text-anchor="middle" fill="#e2c684">D-OB · 4H</text>
+
+              <!-- bias arrow -->
+              <line x1="380" y1="48" x2="430" y2="48" stroke="#e2c684" stroke-width="1.4"/>
+              <polygon points="430,42 442,48 430,54" fill="#e2c684"/>
+              <text x="442" y="46" fill="#e2c684" text-anchor="start">BIAS · LONG</text>
+              <text x="442" y="58" fill="rgba(232,228,216,0.5)" text-anchor="start">+9 / 12 DRIVERS</text>
+            </g>
+          </svg>
+          <div class="chart-footer">
+            <span>WK 18 · 2026</span>
+            <span>FRAME · 4H</span>
+            <span>SESSION · LDN</span>
+          </div>
+        </div>
+
+        <!-- floating mini cards -->
+        <div class="mini mini-1">
+          <div class="lab">12-Driver Weekly Bias</div>
+          <div class="row mt-s">
+            <div class="val"><em>+9</em><span style="color:var(--text-mute); font-family:var(--mono); font-size:14px;"> / 12</span></div>
+            <span class="pill">LONG</span>
+          </div>
+          <div style="display:flex; gap:3px; margin-top: 12px;">
+            <span style="flex:1; height:6px; border-radius:3px; background: var(--gold-hi);"></span>
+            <span style="flex:1; height:6px; border-radius:3px; background: var(--gold-hi);"></span>
+            <span style="flex:1; height:6px; border-radius:3px; background: var(--gold-hi);"></span>
+            <span style="flex:1; height:6px; border-radius:3px; background: var(--gold);"></span>
+            <span style="flex:1; height:6px; border-radius:3px; background: var(--gold);"></span>
+            <span style="flex:1; height:6px; border-radius:3px; background: var(--gold);"></span>
+            <span style="flex:1; height:6px; border-radius:3px; background: var(--gold-lo);"></span>
+            <span style="flex:1; height:6px; border-radius:3px; background: var(--gold-lo);"></span>
+            <span style="flex:1; height:6px; border-radius:3px; background: var(--gold-lo);"></span>
+            <span style="flex:1; height:6px; border-radius:3px; background: rgba(255,255,255,0.08);"></span>
+            <span style="flex:1; height:6px; border-radius:3px; background: rgba(255,255,255,0.08);"></span>
+            <span style="flex:1; height:6px; border-radius:3px; background: rgba(255,255,255,0.08);"></span>
+          </div>
+        </div>
+
+        <div class="mini mini-2">
+          <div class="lab">Real Rates · DXY · COT</div>
+          <div style="display:flex; flex-direction:column; gap:8px; margin-top:10px;">
+            <div class="row"><span class="mono" style="color:var(--text-dim); font-size:13px;">US 10Y REAL</span><span class="pill down">−0.42%</span></div>
+            <div class="row"><span class="mono" style="color:var(--text-dim); font-size:13px;">DXY</span><span class="pill down">104.1</span></div>
+            <div class="row"><span class="mono" style="color:var(--text-dim); font-size:13px;">COT NET LONG</span><span class="pill up">+182k</span></div>
+          </div>
+        </div>
+
+        <div class="mini mini-3">
+          <div class="lab">Liquidity · Structure · Execution</div>
+          <div class="val mt-s"><em>HTF</em> bullish<br/>continuation</div>
+          <div style="display:flex; gap:6px; margin-top: 10px;">
+            <span class="pill neutral">D · OB</span>
+            <span class="pill neutral">4H · BOS</span>
+            <span class="pill">M15 · ENTRY</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================== CREDIBILITY STRIP ====================== -->
+<section class="section">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">The premise</span>
+      <h2>Built from the framework I <em class="it">actually use</em> every week.</h2>
+    </div>
+    <div class="proof-grid">
+      <div class="proof glass">
+        <div class="proof-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 17l5-5 4 4 8-8"/><path d="M14 8h7v7"/></svg>
+        </div>
+        <p class="proof-text">Built from the framework I actually use weekly.</p>
+      </div>
+      <div class="proof glass">
+        <div class="proof-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7l8-4z"/></svg>
+        </div>
+        <p class="proof-text">Macro and technical integration most retail traders never get.</p>
+      </div>
+      <div class="proof glass">
+        <div class="proof-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+        </div>
+        <p class="proof-text">Designed for serious traders, not beginners looking for signals.</p>
+      </div>
+      <div class="proof glass">
+        <div class="proof-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2l9 5-9 5-9-5 9-5z"/><path d="M3 12l9 5 9-5"/><path d="M3 17l9 5 9-5"/></svg>
+        </div>
+        <p class="proof-text">One clean offer. No upsells. No funnel.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================== ORIGIN STORY ====================== -->
+<section class="section" id="origin">
+  <div class="wrap">
+    <div class="origin-grid">
+      <div class="origin-body">
+        <span class="eyebrow">Origin</span>
+        <h2 style="margin-top:18px; margin-bottom: 28px;">Why <em class="it">The Vault</em> exists.</h2>
+        <p>I spent years trying to find a single place that combined technical execution with the macro drivers behind gold. It did not exist at the retail level.</p>
+        <p>Most trading education gives you setups, entries, and chart patterns, then leaves you to figure out why those setups stop working when conditions change.</p>
+        <p>The Vault was built to solve that exact problem. It gives you the technical layer, the macro layer, and the weekly workflow that ties both together into one decision-making system.</p>
+      </div>
+
+      <div class="framework glass">
+        <div class="framework-title">Framework · One operating system</div>
+        <div class="layer-stack">
+          <div class="layer">
+            <span class="n">01</span>
+            <span class="name">Technicals</span>
+            <span class="tag">Foundation</span>
+          </div>
+          <div class="layer is-key">
+            <span class="n">02</span>
+            <span class="name">Macro Drivers</span>
+            <span class="tag">Context</span>
+          </div>
+          <div class="layer is-key">
+            <span class="n">03</span>
+            <span class="name">Weekly Workflow</span>
+            <span class="tag">Decision</span>
+          </div>
+          <div class="layer">
+            <span class="n">04</span>
+            <span class="name">Execution</span>
+            <span class="tag">Outcome</span>
+          </div>
+        </div>
+        <div class="framework-foot">
+          <span>One <em>operating system</em>.</span>
+          <span class="ring">→</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================== WHY DIFFERENT ====================== -->
+<section class="section" id="different">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">Why this is different</span>
+      <h2>Not another <em class="it">trading course.</em></h2>
+      <p class="lede">Most programs teach you what to look for on a chart. The Vault teaches you how to think, how to read gold in context, and how to turn that context into structured decisions.</p>
+    </div>
+
+    <div class="compare">
+      <div class="compare-col is-most">
+        <div class="compare-head">
+          <span class="label">Most programs</span>
+        </div>
+        <div class="compare-head" style="border:none; padding-bottom:0; margin-bottom:8px;">
+          <span class="title">What you usually get</span>
+        </div>
+        <div class="compare-list">
+          <div class="item"><span class="glyph">—</span>Entry models and setups</div>
+          <div class="item"><span class="glyph">—</span>Indicator strategies</div>
+          <div class="item"><span class="glyph">—</span>Backtested examples</div>
+          <div class="item"><span class="glyph">—</span>No context for why price moves</div>
+          <div class="item"><span class="glyph">—</span>No fundamental layer</div>
+          <div class="item"><span class="glyph">—</span>No weekly workflow</div>
+        </div>
+      </div>
+      <div class="compare-col is-vault">
+        <div class="compare-head">
+          <span class="label">The Vault</span>
+        </div>
+        <div class="compare-head" style="border:none; padding-bottom:0; margin-bottom:8px;">
+          <span class="title">What you actually need</span>
+        </div>
+        <div class="compare-list">
+          <div class="item"><span class="glyph">◆</span>Technical execution framework</div>
+          <div class="item"><span class="glyph">◆</span>Gold macro fundamentals engine</div>
+          <div class="item"><span class="glyph">◆</span>Real rate, DXY, Fed, COT, SGE analysis</div>
+          <div class="item"><span class="glyph">◆</span>Weekly scoring system across 12 drivers</div>
+          <div class="item"><span class="glyph">◆</span>Complete operator workflow</div>
+          <div class="item"><span class="glyph">◆</span>Trade film review protocol</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================== MODULE MAP ====================== -->
+<section class="section" id="modules">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">Inside The Vault</span>
+      <h2>Fifteen modules. <em class="it">Sequenced with intention.</em></h2>
+      <p class="lede">Technical foundation first. Macro layer second. Execution and business integration last. Each module is built to install one specific layer of the operator system.</p>
+    </div>
+
+    <div class="modules">
+      <!-- PART I -->
+      <div class="mod-col glass">
+        <div>
+          <div class="part">Part I</div>
+          <h3>Technical<br/>Foundation</h3>
+        </div>
+        <span class="range"><span class="num">01 — 08</span> · 8 modules</span>
+        <ul class="mod-list">
+          <li><span class="ix">01</span><span class="nm">Orientation — Operator Mindset</span></li>
+          <li><span class="ix">02</span><span class="nm">Market Mechanics — Price Behavior</span></li>
+          <li><span class="ix">03</span><span class="nm">Market Regimes — Risk Environment</span></li>
+          <li><span class="ix">04</span><span class="nm">Volatility — Risk Control</span></li>
+          <li><span class="ix">05</span><span class="nm">Trend Filters — Momentum Health</span></li>
+          <li><span class="ix">06</span><span class="nm">Liquidity — Smart Money Logic</span></li>
+          <li><span class="ix">07</span><span class="nm">Structure, Imbalance, Order Blocks</span></li>
+          <li><span class="ix">08</span><span class="nm">Execution Models — Playbooks</span></li>
+        </ul>
+        <p class="mod-note">The technical base layer — the language and mechanics every later module is built on top of.</p>
+      </div>
+
+      <!-- PART II (highlighted) -->
+      <div class="mod-col is-key">
+        <span class="crown">Crown jewel</span>
+        <div>
+          <div class="part">Part II</div>
+          <h3>Macro<br/>Layer</h3>
+        </div>
+        <span class="range"><span class="num">09 — 10</span> · 2 modules</span>
+        <ul class="mod-list">
+          <li><span class="ix">09</span><span class="nm">Gold Macro Fundamental Analysis</span></li>
+          <li><span class="ix">10</span><span class="nm">The Weekly Operator Workflow</span></li>
+        </ul>
+        <p class="mod-note" style="color: rgba(232,198,132,0.78);">The crown jewel of The Vault. Why gold moves, which drivers matter most, and how to build a weekly bias using a 12-driver framework.</p>
+        <div style="display:flex; gap:6px; flex-wrap: wrap;">
+          <span class="pill">Real Rates</span>
+          <span class="pill">DXY</span>
+          <span class="pill">Fed</span>
+          <span class="pill">COT</span>
+          <span class="pill">SGE</span>
+        </div>
+      </div>
+
+      <!-- PART III -->
+      <div class="mod-col glass">
+        <div>
+          <div class="part">Part III</div>
+          <h3>Integration,<br/>Capital, Business</h3>
+        </div>
+        <span class="range"><span class="num">11 — 15</span> · 5 modules</span>
+        <ul class="mod-list">
+          <li><span class="ix">11</span><span class="nm">Live Examples — Trade Deconstruction</span></li>
+          <li><span class="ix">12</span><span class="nm">Prop Firm Capital Access</span></li>
+          <li><span class="ix">13</span><span class="nm">Copy Trading — Risk Delegation</span></li>
+          <li><span class="ix">14</span><span class="nm">Trading as a Business</span></li>
+          <li><span class="ix">15</span><span class="nm">Operator Graduation</span></li>
+        </ul>
+        <p class="mod-note">Where the system becomes a career — capital access, infrastructure, and operating at scale.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================== INCLUDED ====================== -->
+<section class="section" id="included">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">What you get</span>
+      <h2>The system, <em class="it">end to end.</em></h2>
+      <p class="lede">No bonus stacks. No "Bonus #4: Surprise!" energy. Just every component of the operating system, included.</p>
+    </div>
+    <div class="inc-grid">
+      <div class="inc">
+        <div class="inc-ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><polygon points="6 4 20 12 6 20 6 4"/></svg></div>
+        <div class="inc-text">15 self-paced video modules</div>
+      </div>
+      <div class="inc">
+        <div class="inc-ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></div>
+        <div class="inc-text">12-Driver Macro Scoring System</div>
+      </div>
+      <div class="inc">
+        <div class="inc-ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+        <div class="inc-text">Sunday Macro Prep Protocol</div>
+      </div>
+      <div class="inc">
+        <div class="inc-ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+        <div class="inc-text">Weekly Bias Statement Template</div>
+      </div>
+      <div class="inc">
+        <div class="inc-ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+        <div class="inc-text">Daily Pre-Session Scan framework</div>
+      </div>
+      <div class="inc">
+        <div class="inc-ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg></div>
+        <div class="inc-text">Live trade deconstruction examples</div>
+      </div>
+      <div class="inc">
+        <div class="inc-ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
+        <div class="inc-text">Trade Film Review Framework</div>
+      </div>
+      <div class="inc">
+        <div class="inc-ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15 15 0 010 20"/><path d="M12 2a15 15 0 000 20"/></svg></div>
+        <div class="inc-text">Gold Seasonality Calendar</div>
+      </div>
+      <div class="inc">
+        <div class="inc-ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 6-6"/></svg></div>
+        <div class="inc-text">COT Interpretation Framework</div>
+      </div>
+      <div class="inc">
+        <div class="inc-ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 7h20l-2 12H4L2 7z"/><path d="M8 7V4a2 2 0 012-2h4a2 2 0 012 2v3"/></svg></div>
+        <div class="inc-text">Prop firm &amp; business infrastructure modules</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================== WHO IT'S FOR ====================== -->
+<section class="section">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">Fit check</span>
+      <h2>Who <em class="it">The Vault</em> is for.</h2>
+    </div>
+    <div class="who">
+      <div class="who-card fit">
+        <h3><span class="badge">Good fit</span> <span>This is for you if…</span></h3>
+        <ul class="who-list">
+          <li><span class="mk">◆</span>You already understand basic chart structure and trading concepts.</li>
+          <li><span class="mk">◆</span>You've taken education before, but still feel a missing layer above technicals.</li>
+          <li><span class="mk">◆</span>You want one integrated system for gold, not disconnected strategies.</li>
+          <li><span class="mk">◆</span>You're serious about becoming more structured, consistent, and capital-ready.</li>
+        </ul>
+      </div>
+      <div class="who-card no-fit">
+        <h3><span class="badge">Not a fit</span> <span>This isn't for you if…</span></h3>
+        <ul class="who-list">
+          <li><span class="mk">—</span>You're a complete beginner with zero chart literacy.</li>
+          <li><span class="mk">—</span>You want signals, or someone to tell you what to trade.</li>
+          <li><span class="mk">—</span>You want a fast-money promise.</li>
+          <li><span class="mk">—</span>You already have a profitable system and only want minor tweaks.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================== PRICING ====================== -->
+<section class="section" id="pricing">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">Founding cohort pricing</span>
+      <h2>One clean offer. <em class="it">One price.</em></h2>
+      <p class="lede">This is not priced like a disposable product, and it is not presented like a high-pressure funnel. No fake countdowns. No endless upsells. No inflated bonus stack.</p>
+    </div>
+
+    <div class="pricing-wrap">
+      <div class="price-card">
+        <div class="price-head">
+          <span class="price-tag"><span class="seat-dot"></span>Founding cohort · 2026</span>
+        </div>
+        <div class="price-big">
+          <span class="currency">$</span>797
+          <span class="usd">USD · one time</span>
+        </div>
+        <div class="price-future">Future public pricing — <em>$1,997 USD</em></div>
+
+        <ul class="price-bullets">
+          <li><span class="ck">✓</span> Lifetime access · all 15 modules</li>
+          <li><span class="ck">✓</span> 12-Driver Macro Scoring System</li>
+          <li><span class="ck">✓</span> Weekly Operator Workflow + templates</li>
+          <li><span class="ck">✓</span> Live deconstruction + Trade Film Review</li>
+        </ul>
+
+        <div class="price-cta">
+          <a class="btn btn-primary" style="width:100%; justify-content: center;" href="https://4xprophet.com/product/the-vault-prelaunch/">
+            Get The Vault
+            <span class="arrow">→</span>
+          </a>
+        </div>
+
+        <div class="price-body">
+          Founding cohort access is offered once. The next public release moves to the full $1,997 USD price. If you're already operating at a level where this framework would meaningfully change your decision-making, this is the window.
+        </div>
+      </div>
+
+      <div>
+        <h3 style="font-family:var(--serif); font-size: clamp(28px, 3.2vw, 40px); margin-bottom: 18px;">A different way to <em class="it">price an education product.</em></h3>
+        <p class="lede" style="margin-bottom: 22px;">No slashed fake retail. No "valued at $9,997 today only" theater. The price reflects what The Vault is: the full operating system, documented once, sold once, used for the rest of your career as a trader.</p>
+        <div style="display:flex; flex-direction:column; gap:14px; max-width: 460px;">
+          <div style="display:flex; gap:14px; align-items:flex-start;">
+            <span style="font-family:var(--mono); font-size:11px; color:var(--gold); letter-spacing:0.18em; min-width:64px; padding-top:3px;">NOW</span>
+            <span style="font-family:var(--serif); font-size:20px; color:var(--text);">$797 — founding cohort, first public availability.</span>
+          </div>
+          <div style="height:1px; background: var(--line-soft);"></div>
+          <div style="display:flex; gap:14px; align-items:flex-start;">
+            <span style="font-family:var(--mono); font-size:11px; color:var(--text-mute); letter-spacing:0.18em; min-width:64px; padding-top:3px;">NEXT</span>
+            <span style="font-family:var(--serif); font-size:20px; color:var(--text-dim);">$1,997 — full public pricing thereafter.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================== FAQ ====================== -->
+<section class="section" id="faq">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">Honest answers</span>
+      <h2>Questions, <em class="it">answered directly.</em></h2>
+    </div>
+
+    <div class="faq">
+      <details class="qa" open>
+        <summary>Is this a course?<span class="ic">+</span></summary>
+        <div class="qa-body">Not in the typical sense. The Vault is the operating system I trade from, documented and packaged for serious traders who want one integrated framework instead of scattered education.</div>
+      </details>
+      <details class="qa">
+        <summary>Why should I trust this?<span class="ic">+</span></summary>
+        <div class="qa-body">You should not trust screenshots alone. The stronger case is a documented operating system built from real use, real market preparation, and real capital context. Judge it on the framework itself, not on testimonial theater.</div>
+      </details>
+      <details class="qa">
+        <summary>Can I find this on YouTube for free?<span class="ic">+</span></summary>
+        <div class="qa-body">You can find isolated concepts for free. What you will not find is a sequenced, integrated, gold-specific system that goes from mindset to regime to execution to macro to workflow to business infrastructure in one place — with the templates and protocols to actually run it.</div>
+      </details>
+      <details class="qa">
+        <summary>Will this work for me?<span class="ic">+</span></summary>
+        <div class="qa-body">If you already have the basics but lack macro context, regime awareness, and a weekly decision framework, this is exactly the gap it was built to solve. If you're still learning what a candle is, this isn't the right starting point.</div>
+      </details>
+      <details class="qa">
+        <summary>How long will it take to go through?<span class="ic">+</span></summary>
+        <div class="qa-body">It's self-paced. Most operators move through the technical foundation in two to three weeks, then settle into the macro and weekly workflow modules as a permanent part of their process. The Vault is designed to be used continuously, not finished.</div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ====================== FINAL CTA ====================== -->
+<section class="section">
+  <div class="wrap">
+    <div class="final">
+      <span class="eyebrow" style="position:relative;">The Vault · 2026</span>
+      <h2 style="margin-top: 22px;">Install the system <em class="it">behind how you trade.</em></h2>
+      <p>If you're done collecting strategies and ready to work from one complete framework — technical, macro, and operational — The Vault was built for you.</p>
+      <a class="btn btn-primary" href="https://4xprophet.com/product/the-vault-prelaunch/">
+        Get The Vault
+        <span class="arrow">→</span>
+      </a>
+      <p class="hero-micro">Founding cohort price: <span class="num">$797 USD</span> · Future public pricing: <span class="num">$1,997 USD</span>.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ====================== FOOTER ====================== -->
+<footer>
+  <div class="wrap foot">
+    <div style="display:flex; align-items:center; gap:12px;">
+      <span class="brand-mark" style="width:24px; height:24px; border-radius:6px;"></span>
+      <span class="mono" style="font-size:12px; letter-spacing:0.14em; text-transform:uppercase; color: var(--text-dim);">The Vault · 4xProphet</span>
+    </div>
+    <div class="foot-links">
+      <a href="#modules">Modules</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#faq">FAQ</a>
+      <a href="https://4xprophet.com/product/the-vault-prelaunch/">Enroll</a>
+    </div>
+    <div>© 2026 · All rights reserved.</div>
+  </div>
+</footer>
+
+</main>
+
+<script>
+  // Keep only one FAQ open at a time
+  const faq = document.querySelectorAll('.qa');
+  faq.forEach(d => d.addEventListener('toggle', () => {
+    if (d.open) faq.forEach(o => { if (o !== d) o.open = false; });
+  }));
+</script>
+
+</body>
+</html>

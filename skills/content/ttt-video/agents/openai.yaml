@@ -1,0 +1,4 @@
+interface:
+  display_name: "T³ Video"
+  short_description: "Analyze footage and build T³ scripts and edit briefs"
+  default_prompt: "Use $ttt-video to review this video and turn the strongest supported moments into T³ creative."
